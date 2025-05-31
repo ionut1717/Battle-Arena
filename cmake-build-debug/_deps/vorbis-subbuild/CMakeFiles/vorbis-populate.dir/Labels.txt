@@ -1,0 +1,14 @@
+# Target labels
+ vorbis-populate
+# Source files and their labels
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/CMakeFiles/vorbis-populate
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/CMakeFiles/vorbis-populate.rule
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/CMakeFiles/vorbis-populate-complete.rule
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/vorbis-populate-prefix/src/vorbis-populate-stamp/vorbis-populate-build.rule
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/vorbis-populate-prefix/src/vorbis-populate-stamp/vorbis-populate-configure.rule
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/vorbis-populate-prefix/src/vorbis-populate-stamp/vorbis-populate-download.rule
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/vorbis-populate-prefix/src/vorbis-populate-stamp/vorbis-populate-install.rule
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/vorbis-populate-prefix/src/vorbis-populate-stamp/vorbis-populate-mkdir.rule
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/vorbis-populate-prefix/src/vorbis-populate-stamp/vorbis-populate-patch.rule
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/vorbis-populate-prefix/src/vorbis-populate-stamp/vorbis-populate-test.rule
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/vorbis-subbuild/vorbis-populate-prefix/src/vorbis-populate-stamp/vorbis-populate-update.rule

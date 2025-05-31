@@ -1,0 +1,3 @@
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/sfml-subbuild/CMakeFiles/sfml-populate.dir
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/sfml-subbuild/CMakeFiles/edit_cache.dir
+D:/ALL_FAC/clion_fac/Battle-Arena/cmake-build-debug/_deps/sfml-subbuild/CMakeFiles/rebuild_cache.dir
