@@ -17,11 +17,15 @@ add_executable(Battle-Arena
         Arena.h
         Balloon.h
         Game.h
-        Game_State.h
         Player.h
         Tiles.h
-        Classes.h
-        Menu.h
+        Balloon.cpp
+        Resource_Manager.cpp
+        Resource_Manager.h
+        Tiles.cpp
+        Player.cpp
+        Game.cpp
+        Arena.cpp
 )
 target_compile_features(Battle-Arena PRIVATE cxx_std_17)
 target_link_libraries(Battle-Arena PRIVATE SFML::Graphics SFML::Window SFML::System)
