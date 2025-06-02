@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "Tiles.h" // Include Tiles for Tile::getSize() and TileSpecialType logic
+#include "Arena/Tiles/Tiles.h"
 
 // Helper method to calculate sf::IntRect
 sf::IntRect Player::getFrameRect(int row, int col) {

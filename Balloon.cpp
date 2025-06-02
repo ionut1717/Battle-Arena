@@ -1,13 +1,15 @@
 #include "Balloon.h"
 #include "Player.h" // Include Player.h to access Player's methods (e.g., getPosition())
 
+float AttackBalloon::lifespan=15;
+float AttackBalloon::radius=10;
+
 // Constructor implementation
-AttackBalloon::AttackBalloon(float radius, const sf::Color& color, sf::Vector2f startCoordinates)
-    : sf::CircleShape(radius), coordinates(startCoordinates) {
-    setFillColor(color);
-    setOrigin({radius, radius}); // Set origin to center for easier positioning
-    setPosition(coordinates);
-    m_radius = radius; // Store radius
+AttackBalloon::AttackBalloon(const sf::Color& color, sf::Vector2f startCoordinates)
+    : m_shape(radius), coordinates(startCoordinates) {
+    m_shape.setFillColor(color);
+    m_shape.setOrigin({radius, radius}); // Set origin to center for easier positioning
+    m_shape.setPosition(coordinates);
 }
 
 // setTarget implementation
@@ -26,7 +28,7 @@ void AttackBalloon::launch(sf::Vector2f initialVel) {
 void AttackBalloon::update(float deltaTime) {
     if (m_target != nullptr) {
         sf::Vector2f targetPosition = m_target->getPosition();
-        sf::Vector2f balloonPosition = getPosition();
+        sf::Vector2f balloonPosition = m_shape.getPosition();
 
         sf::Vector2f directionToTarget = targetPosition - balloonPosition;
         float distanceToTarget = std::sqrt(directionToTarget.x * directionToTarget.x + directionToTarget.y * directionToTarget.y);
@@ -59,8 +61,8 @@ void AttackBalloon::update(float deltaTime) {
             m_currentVelocity = {0.0f, 0.0f};
         }
 
-        move(m_currentVelocity * deltaTime);
-        coordinates = getPosition(); // Update internal coordinates
+        std::move(m_currentVelocity * deltaTime);
+        coordinates = m_shape.getPosition(); // Update internal coordinates
     } else {
         // If no target, continue movement based on attenuated initial impulse
         float elapsed = lifetimeClock.getElapsedTime().asSeconds();
@@ -74,8 +76,8 @@ void AttackBalloon::update(float deltaTime) {
 
         m_currentVelocity = m_initialLaunchVelocity * attenuationFactor;
 
-        move(m_currentVelocity * deltaTime);
-        coordinates = getPosition(); // Update internal coordinates
+        std::move(m_currentVelocity * deltaTime);
+        coordinates = m_shape.getPosition(); // Update internal coordinates
     }
 }
 
@@ -85,4 +87,4 @@ bool AttackBalloon::isExpired() const {
 }
 
 // getRadius implementation
-float AttackBalloon::getRadius() const { return m_radius; }
+float AttackBalloon::getRadius() const { return radius; }

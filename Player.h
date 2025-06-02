@@ -8,7 +8,7 @@
 #include <cmath>
 #include <SFML/System.hpp>
 #include <iostream> // For std::cout/cerr, can be moved if desired
-#include "Arena.h" // Arena needs Tiles.h, so Player can include Arena
+#include "Arena/Arena.h"
 
 // Enum pentru a mapa mai ușor direcțiile de animație la un index
 enum AnimationDirection {
@@ -100,7 +100,11 @@ public:
     void paintNearbyTiles(std::vector<std::vector<std::unique_ptr<Tile>>>& grid, const float radius);
     Player* getPlayer(); // Consider if this is truly necessary, often 'this' pointer is enough
 
-    // Status/State methods
+    void heal(float value) {
+        PlayerHealth += value;
+        if (PlayerHealth+value>100)
+            PlayerHealth = 100;
+    };
     void setStuck(bool stuck);
     bool getIsStuck() const;
     void setPosition(sf::Vector2f newPos);

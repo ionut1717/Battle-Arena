@@ -1,54 +1,49 @@
 #include "Game.h"
-#include "Tiles.h" // Needed for Tile::getSize() and TileSpecialType enum in the cpp file
-#include "Arena.h" // Needed for Arena::GetGridSize() and Arena class in the cpp file
-// Resource_Manager.h is included via Game.h, so no need for explicit include here.
+#include "Arena/Tiles/Tiles.h"
+#include "Arena/Arena.h"
 
 
-// Definition of the static Instance() method for the singleton
 Game_Engine& Game_Engine::Instance() {
-    static Game_Engine instance; // The single instance is created here, once.
+    static Game_Engine instance;
     return instance;
 }
 
-// Protected constructor for the singleton Game_Engine
-// Initialize member sf::Text objects here.
-Game_Engine::Game_Engine()
-    : player1PercentageText(), player2PercentageText(), totalTilesText() // Explicitly call default constructors
-{
-    rng.seed(std::chrono::high_resolution_clock::now().time_since_epoch().count());
-
-    // --- Initialize UI Elements that need resources or specific setup ---
-    try {
-        // Load the font using the Resource_Manager
-        // Assuming your font file is in 'assets/Font.ttf'
-        sf::Font& loadedFont = Resource_Manager::Instance().load<sf::Font>("assets/Font.ttf");
-
-        // Set the font for your sf::Text members
-        player1PercentageText.setFont(loadedFont);
-        player2PercentageText.setFont(loadedFont);
-        totalTilesText.setFont(loadedFont);
-
-        // Set initial character sizes and fill colors (can be modified later in GameLoop)
-        player1PercentageText.setCharacterSize(14);
-        player1PercentageText.setFillColor(sf::Color::White);
-
-        player2PercentageText.setCharacterSize(14);
-        player2PercentageText.setFillColor(sf::Color::White);
-
-        totalTilesText.setCharacterSize(10);
-        totalTilesText.setFillColor(sf::Color::Black);
-
-    } catch (const std::runtime_error& e) {
-        std::cerr << "Error initializing Game_Engine: " << e.what() << std::endl;
-        // Optionally, you could set a default font or handle this error more gracefully.
-        // For now, it will print an error and the game might run without text.
-    }
-
-    // Initialize sf::RectangleShapes (their sizes/positions will be set in GameLoop based on window size)
-    ownershipBarBackground = sf::RectangleShape();
-    player1OwnershipBar = sf::RectangleShape();
-    player2OwnershipBar = sf::RectangleShape();
-}
+// Game_Engine::Game_Engine()=default; // Explicitly call default constructors
+// {
+//     // rng.seed(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    //
+    // // --- Initialize UI Elements that need resources or specific setup ---
+    // try {
+    //     // Load the font using the Resource_Manager
+    //     // Assuming your font file is in 'assets/Font.ttf'
+    //
+    //
+    //     // Set the font for your sf::Text members
+    //     player1PercentageText.setFont(loadedFont);
+    //     player2PercentageText.setFont(loadedFont);
+    //     totalTilesText.setFont(loadedFont);
+    //
+    //     // Set initial character sizes and fill colors (can be modified later in GameLoop)
+    //     player1PercentageText.setCharacterSize(14);
+    //     player1PercentageText.setFillColor(sf::Color::White);
+    //
+    //     player2PercentageText.setCharacterSize(14);
+    //     player2PercentageText.setFillColor(sf::Color::White);
+    //
+    //     totalTilesText.setCharacterSize(10);
+    //     totalTilesText.setFillColor(sf::Color::Black);
+    //
+    // } catch (const std::runtime_error& e) {
+    //     std::cerr << "Error initializing Game_Engine: " << e.what() << std::endl;
+    //     // Optionally, you could set a default font or handle this error more gracefully.
+    //     // For now, it will print an error and the game might run without text.
+    // }
+    //
+    // // Initialize sf::RectangleShapes (their sizes/positions will be set in GameLoop based on window size)
+    // ownershipBarBackground = sf::RectangleShape();
+    // player1OwnershipBar = sf::RectangleShape();
+    // player2OwnershipBar = sf::RectangleShape();
+// }
 
 
 // Helper function to process player-tile interactions
@@ -82,10 +77,10 @@ void Game_Engine::processPlayerTileInteraction(Player& player, float dt, std::ve
 
             // AABB collision check
             bool intersects =
-                playerBounds.position.x < tileBounds.position.x + tileBounds.size.x &&
-                playerBounds.position.x + playerBounds.size.x > tileBounds.position.x &&
-                playerBounds.position.y < tileBounds.position.y + tileBounds.size.y &&
-                playerBounds.position.y + playerBounds.size.y > tileBounds.position.y;
+                playerBounds.position.x < tileBounds.position.x + tileBounds.size.x/2 &&
+                playerBounds.position.x + playerBounds.size.x/2 > tileBounds.position.x &&
+                playerBounds.position.y < tileBounds.position.y + tileBounds.size.y/2 &&
+                playerBounds.position.y + playerBounds.size.y/2 > tileBounds.position.y;
 
             if (intersects) {
                 sf::Vector2i currentTileIdx = {x, y};
@@ -93,11 +88,11 @@ void Game_Engine::processPlayerTileInteraction(Player& player, float dt, std::ve
                                         player.getLastGridPosition().y != currentTileIdx.y);
 
                 switch (tile.getSpecialType()) {
-                    case STICKY:
+                    case TileSpecialType::STICKY:
                         player.setStuck(true);
                         currentIntersectedTile = &tile;
                         break;
-                    case DAMAGE:
+                    case TileSpecialType::DAMAGE:
                         player.setOnDamageTile(true);
                         currentIntersectedTile = &tile;
                         if (enteredThisTile) {
@@ -110,7 +105,7 @@ void Game_Engine::processPlayerTileInteraction(Player& player, float dt, std::ve
                             }
                         }
                         break;
-                    case TELEPORTER:
+                    case TileSpecialType::TELEPORTER:
                         currentIntersectedTile = &tile;
                         if (enteredThisTile) {
                             // Teleport only if owned by the current player OR unowned
@@ -125,7 +120,7 @@ void Game_Engine::processPlayerTileInteraction(Player& player, float dt, std::ve
                             }
                         }
                         break;
-                    case HEALING:
+                    case TileSpecialType::HEALING:
                         if (tile.getOwner() == player.GetPlayerID() && enteredThisTile) {
                             // Example healing logic:
                             player.heal(10); // Assuming you have a heal() method in Player
@@ -133,7 +128,7 @@ void Game_Engine::processPlayerTileInteraction(Player& player, float dt, std::ve
                         }
                         currentIntersectedTile = &tile;
                         break;
-                    case NONE:
+                    case TileSpecialType::NONE:
                     default:
                         // Nothing special to do for normal tiles
                         break;
@@ -180,10 +175,12 @@ void Game_Engine::GameLoop() {
 
     // --- Load textures using Resource_Manager ---
     // Assuming your textures are in 'assets/' directory
-    sf::Texture& defaultTexture = Resource_Manager::Instance().load<sf::Texture>("assets/sprite_tile2.jpg");
-    sf::Texture& PlayerTexture = Resource_Manager::Instance().load<sf::Texture>("assets/hero.png");
+    sf::Texture defaultTexture;
+    defaultTexture.loadFromFile("Assets/sprite_tile.jpg");
+    sf::Texture PlayerTexture;
+    PlayerTexture.loadFromFile("Assets/hero.png");
 
-    Arena arena(defaultTexture);
+    Arena &arena=Arena::getInstance(defaultTexture);
     std::vector<std::vector<std::unique_ptr<Tile>>>& grid = arena.GetGrid();
 
     Player player1(1, sf::Color::Blue, {50.0f, 50.0f}, true, PlayerTexture);
@@ -210,25 +207,25 @@ void Game_Engine::GameLoop() {
     float ownershipBarHeight = 20.0f; // Height of the ownership bar
     float ownershipBarPaddingTop = 10.0f; // Padding from top edge
 
-    ownershipBarBackground.setSize({ownershipBarWidth, ownershipBarHeight});
-    ownershipBarBackground.setFillColor(sf::Color(100, 100, 100, 180)); // Grey background, semi-transparent
-    ownershipBarBackground.setOutlineColor(sf::Color::Black);
-    ownershipBarBackground.setOutlineThickness(2.0f);
-    ownershipBarBackground.setPosition({(windowWidth / 2.0f) - (ownershipBarWidth / 2.0f), ownershipBarPaddingTop});
-
-    player1OwnershipBar.setFillColor(player1.getColor());
-    player2OwnershipBar.setFillColor(player2.getColor());
-    player1OwnershipBar.setSize({0, ownershipBarHeight}); // Start with 0 width
-    player2OwnershipBar.setSize({0, ownershipBarHeight}); // Start with 0 width
+    // ownershipBarBackground.setSize({ownershipBarWidth, ownershipBarHeight});
+    // ownershipBarBackground.setFillColor(sf::Color(100, 100, 100, 180)); // Grey background, semi-transparent
+    // ownershipBarBackground.setOutlineColor(sf::Color::Black);
+    // ownershipBarBackground.setOutlineThickness(2.0f);
+    // ownershipBarBackground.setPosition({(windowWidth / 2.0f) - (ownershipBarWidth / 2.0f), ownershipBarPaddingTop});
+    //
+    // player1OwnershipBar.setFillColor(player1.getColor());
+    // player2OwnershipBar.setFillColor(player2.getColor());
+    // player1OwnershipBar.setSize({0, ownershipBarHeight}); // Start with 0 width
+    // player2OwnershipBar.setSize({0, ownershipBarHeight}); // Start with 0 width
 
     // The font is already set in the Game_Engine constructor.
     // player1PercentageText.setFont(font); // NO LONGER NEEDED HERE
     // player2PercentageText.setFont(font); // NO LONGER NEEDED HERE
     // totalTilesText.setFont(font); // NO LONGER NEEDED HERE
 
-    totalTilesText.setString("Total Tiles: " + std::to_string(arena.getTotalTiles()));
-    totalTilesText.setPosition({ownershipBarBackground.getPosition().x + ownershipBarWidth / 2.0f - totalTilesText.getGlobalBounds().size.x / 2.0f,
-                               ownershipBarBackground.getPosition().y + ownershipBarHeight + 2}); // Below the bar
+    // totalTilesText.setString("Total Tiles: " + std::to_string(arena.getTotalTiles()));
+    // totalTilesText.setPosition({ownershipBarBackground.getPosition().x + ownershipBarWidth / 2.0f - totalTilesText.getGlobalBounds().size.x / 2.0f,
+    //                            ownershipBarBackground.getPosition().y + ownershipBarHeight + 2}); // Below the bar
 
     while (window.isOpen()) {
         sf::Time deltaTime = gameClock.restart();
@@ -270,7 +267,7 @@ void Game_Engine::GameLoop() {
 
                         sf::Vector2f spawnPosition = player1.getPosition() + (launchDirection * spawnOffsetDistance);
 
-                        activeBalloons.emplace_back(10.0f, sf::Color::Black, spawnPosition);
+                        activeBalloons.emplace_back(sf::Color::Black, spawnPosition);
                         if (!activeBalloons.empty()) {
                             AttackBalloon& newBalloon = activeBalloons.back();
                             newBalloon.setTarget(&player2); // Use direct address of player2 object
@@ -386,30 +383,35 @@ void Game_Engine::GameLoop() {
         float player2Percentage = (totalTiles > 0) ? (static_cast<float>(player2Owned) / totalTiles) : 0.0f;
 
         // Adjust widths based on ownership percentage
-        player1OwnershipBar.setSize({ownershipBarWidth * player1Percentage, ownershipBarHeight});
-        player2OwnershipBar.setSize({ownershipBarWidth * player2Percentage, ownershipBarHeight});
-
-        // Position bars next to each other within the background
-        player1OwnershipBar.setPosition(ownershipBarBackground.getPosition().x, ownershipBarBackground.getPosition().y);
-        player2OwnershipBar.setPosition(ownershipBarBackground.getPosition().x + player1OwnershipBar.getSize().x, ownershipBarBackground.getPosition().y);
-
-        // Update percentage texts
-        player1PercentageText.setString(std::to_string(static_cast<int>(player1Percentage * 100)) + "%");
-        player2PercentageText.setString(std::to_string(static_cast<int>(player2Percentage * 100)) + "%");
-
-        // Center percentage texts within their respective bar segments, or just above them for clarity
-        player1PercentageText.setPosition(player1OwnershipBar.getPosition().x + player1OwnershipBar.getGlobalBounds().width / 2.0f - player1PercentageText.getGlobalBounds().width / 2.0f,
-                                          player1OwnershipBar.getPosition().y + ownershipBarHeight / 2.0f - player1PercentageText.getGlobalBounds().height / 2.0f);
-        player2PercentageText.setPosition(player2OwnershipBar.getPosition().x + player2OwnershipBar.getGlobalBounds().width / 2.0f - player2PercentageText.getGlobalBounds().width / 2.0f,
-                                          player2OwnershipBar.getPosition().y + ownershipBarHeight / 2.0f - player2PercentageText.getGlobalBounds().height / 2.0f);
-
-        // Draw ownership bar elements
-        window.draw(ownershipBarBackground);
-        window.draw(player1OwnershipBar);
-        window.draw(player2OwnershipBar);
-        window.draw(player1PercentageText);
-        window.draw(player2PercentageText);
-        window.draw(totalTilesText); // Total tiles text remains at its fixed position
+    //     player1OwnershipBar.setSize({ownershipBarWidth * player1Percentage, ownershipBarHeight});
+    //     player2OwnershipBar.setSize({ownershipBarWidth * player2Percentage, ownershipBarHeight});
+    //
+    //     // Position bars next to each other within the background
+    //     player1OwnershipBar.setPosition({ownershipBarBackground.getPosition().x, ownershipBarBackground.getPosition().y});
+    //     player2OwnershipBar.setPosition({ownershipBarBackground.getPosition().x + player1OwnershipBar.getSize().x,
+    //                                     ownershipBarBackground.getPosition().y
+    // });
+    //
+    //     // Update percentage texts
+    //     player1PercentageText.setString(std::to_string(static_cast<int>(player1Percentage * 100)) + "%");
+    //     player2PercentageText.setString(std::to_string(static_cast<int>(player2Percentage * 100)) + "%");
+    //
+    //     // Center percentage texts within their respective bar segments, or just above them for clarity
+    //     player1PercentageText.setPosition({player1OwnershipBar.getPosition().x + player1OwnershipBar.getGlobalBounds().
+    //                                       size.x / 2.0f - player1PercentageText.getGlobalBounds().size.x / 2.0f,
+    //                                       player1OwnershipBar.getPosition().y + ownershipBarHeight / 2.0f -
+    //                                       player1PercentageText.getGlobalBounds().size.y / 2.0f
+    // });
+    //     player2PercentageText.setPosition({player2OwnershipBar.getPosition().x + player2OwnershipBar.getGlobalBounds().size.x / 2.0f - player2PercentageText.getGlobalBounds().size.y / 2.0f,
+    //                                       player2OwnershipBar.getPosition().y + ownershipBarHeight / 2.0f - player2PercentageText.getGlobalBounds().size.y / 2.0f});
+    //
+    //     // Draw ownership bar elements
+    //     window.draw(ownershipBarBackground);
+    //     window.draw(player1OwnershipBar);
+    //     window.draw(player2OwnershipBar);
+    //     window.draw(player1PercentageText);
+    //     window.draw(player2PercentageText);
+    //     window.draw(totalTilesText); // Total tiles text remains at its fixed position
 
         window.display();
     }

@@ -14,18 +14,26 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable(Battle-Arena
         Battle_Arena.cpp
-        Arena.h
+        Arena/Arena.h
         Balloon.h
         Game.h
         Player.h
-        Tiles.h
+        Arena/Tiles/Tiles.h
         Balloon.cpp
-        Resource_Manager.cpp
-        Resource_Manager.h
-        Tiles.cpp
+        Arena/Tiles/Tiles.cpp
         Player.cpp
         Game.cpp
-        Arena.cpp
+        Arena/Arena.cpp
+        Arena/Tiles/Sticky_Tile.cpp
+        Arena/Tiles/Sticky_Tile.h
+        Arena/Tiles/Damage_Tile.cpp
+        Arena/Tiles/Damage_Tile.h
+        Arena/Tiles/Healing_Tile.cpp
+        Arena/Tiles/Healing_Tile.h
+        Arena/Tiles/Teleporter_Tile.cpp
+        Arena/Tiles/Teleporter_Tile.h
+        Arena/Tiles/Super_Tile.cpp
+        Arena/Tiles/Super_Tile.h
 )
 target_compile_features(Battle-Arena PRIVATE cxx_std_17)
 target_link_libraries(Battle-Arena PRIVATE SFML::Graphics SFML::Window SFML::System)
