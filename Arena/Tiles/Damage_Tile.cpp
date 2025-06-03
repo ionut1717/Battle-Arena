@@ -3,8 +3,9 @@
 //
 
 #include "Damage_Tile.h"
-//const
 float DamageTile::damageAmount=5;
+
+
 DamageTile::DamageTile(float x, float y): Tile(x, y, TileSpecialType::DAMAGE) {
     initialSpecialType = TileSpecialType::DAMAGE;
     damageClock.restart();

@@ -14,7 +14,7 @@ public:
     static float get_slow_down() { return slow_down; }
     StickyTile(float x, float y);
     StickyTile(sf::Texture const& texture, float x, float y);
-
+    float getslowfactor();
 };
 
 

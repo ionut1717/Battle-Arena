@@ -3,22 +3,21 @@
 //
 
 #include "Super_Tile.h"
+float SuperTile::slow_down_factor=0.2;
 SuperTile::SuperTile(float x, float y)
-    : Tile(x, y, TileSpecialType::SUPER), // Initialize the virtual base Tile
-      StickyTile(x, y),  // Initialize StickyTile part
+    : Tile(x, y, TileSpecialType::SUPER),
+      StickyTile(x, y),
       DamageTile(x, y) {
     initialSpecialType = TileSpecialType::SUPER;
 }
-
-// SuperTile constructor for textured tiles
 SuperTile::SuperTile(sf::Texture const& texture, float x, float y)
-    : Tile(texture, x, y, TileSpecialType::SUPER), // Initialize the virtual base Tile
+    : Tile(texture, x, y, TileSpecialType::SUPER),
       StickyTile(texture, x, y),
-      DamageTile(texture, x, y) { // Initialize DamageTile part
+      DamageTile(texture, x, y) {
     initialSpecialType = TileSpecialType::SUPER;
-    // Culoarea va fi setată de Tile::getTileTypeColor(SUPER)
 }
-void static getData(float& out_slowDown, float& out_anotherValue) {
-    out_slowDown = StickyTile::get_slow_down();
+// for future updates
+void SuperTile::getData(float& out_slowDown, float& out_anotherValue) {
+    out_slowDown = slow_down_factor;
     out_anotherValue = DamageTile::getDamageAmount();
 }

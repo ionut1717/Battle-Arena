@@ -5,12 +5,11 @@
 #include <SFML/Window.hpp>
 #include <vector>
 #include <map>
-#include <cmath>
 #include <SFML/System.hpp>
-#include <iostream>
-#include "Arena/Arena.h" // Necesar pentru Arena::GetGridSize() și Tile::getSize()
+#include "Arena/Arena.h"
+#include <memory>
+#include "Arena/Tiles/Tiles.h"
 
-// Enum pentru a mapa mai ușor direcțiile de animație la un index
 enum AnimationDirection {
     AnimDown = 0,
     AnimDownRight,
@@ -24,7 +23,6 @@ enum AnimationDirection {
 };
 
 class Player {
-private:
     int playerID;
     int playerHealth = 100;
     sf::Color color;
@@ -36,7 +34,7 @@ private:
     bool isEliminated = false;
     float playerRadius;
     bool isStuck = false;
-    const float stuckSpeedFactor = 0.2f;
+    float stuckSpeedFactor;
     bool isOnDamageTile = false;
     sf::Clock damageTickClock;
     const float damageTickRate = 1.0f;
@@ -45,41 +43,44 @@ private:
 
     sf::Vector2i lastGridPosition = {-1, -1};
 
-    sf::Texture& playerTexture; // Referință la textură
+    // MODIFIED: Changed from reference to pointer
+    sf::Texture* playerTexture;
     sf::Sprite playerSprite;
     sf::Clock animationClock;
-    float animationFrameTime = 1.0f / 10.0f; // 10 frame-uri pe secundă
+    float animationFrameTime = 1.0f /60.0f;
     int currentFrame = 0;
     std::map<AnimationDirection, std::vector<sf::IntRect>> animationFrames;
     AnimationDirection currentAnimationDirection = AnimDown;
     bool isMoving = false;
     bool facingLeft = false;
 
-    // Dimensiunea unui frame în fișierul textură (celula spritesheet-ului)
     static constexpr int m_frameSize = 128;
-    // Dimensiunea țintă a playerului pe ecran (m_tileSize va fi 4 * Tile::getSize() = 200)
-    float m_tileSize; // Inițializat în constructor
+    float m_tileSize;
 
-    // NOU: Dimensiunea vizuală efectivă a caracterului pe ecran (fără spațiul transparent)
-    float m_characterVisualSize; // Ex: va fi 100.0f dacă sprite-ul e de 2 ori mai mic decât hitbox-ul de 200
+    float m_characterVisualSize;
 
     sf::Clock paintCooldownClock;
     const float paintCooldownTime = 3.0f;
+
+    bool m_inUse = false;
 
     sf::IntRect getFrameRect(int row, int col);
     void setupAnimationFrames();
     void determineAnimationDirection(sf::Vector2f currentVelocity);
     void updateAnimation();
+    void resetForReuse();
 
 public:
-    Player(int playerID, const sf::Color& color, sf::Vector2f startPosition, bool wasd, sf::Texture& playerTextureRef);
+    // MODIFIED: Constructor now takes a pointer
+    Player(int playerID, const sf::Color& color, sf::Vector2f startPosition, bool wasd, sf::Texture* playerTexturePtr);
 
     int getPlayerID() const;
     void getDamageBalloon();
+    void getDamageTile(float value);
     void setKeyPressed(sf::Keyboard::Key key, bool pressed);
     float getActualPlayerSpeed() const;
     void updatePosition(float deltaTime);
-    void draw(sf::RenderWindow& window) const; // Am asumat că ai adăugat const
+    void draw(sf::RenderWindow& window) const;
     sf::FloatRect getBounds() const;
     sf::Vector2f getPosition() const;
     unsigned int getHealth() const;
@@ -92,10 +93,10 @@ public:
     bool isFacingLeft() const;
     AnimationDirection getCurrentAnimationDirection() const;
 
-    void paintNearbyTiles(std::vector<std::vector<std::unique_ptr<Tile>>>& grid, float radius);
+    void paintNearbyTiles(std::vector<std::vector<std::unique_ptr<Tile>>>& grid, float radius_factor);
 
     void heal(float value);
-    void setStuck(bool stuck);
+    void setStuck(bool stuck,float value);
     bool getIsStuck() const;
     void setPosition(sf::Vector2f newPos);
     void setOnDamageTile(bool onTile);
@@ -108,6 +109,13 @@ public:
     sf::Vector2i getLastGridPosition() const;
     void setLastGridPosition(sf::Vector2i pos);
     void resetHealthAndState();
+
+    static const int MAX_PLAYERS = 2;
+    static std::vector<std::unique_ptr<Player>> s_playerPool;
+    static std::vector<Player*> s_activePlayers;
+    // MODIFIED: acquirePlayer now takes a pointer
+    static Player* acquirePlayer(int playerID, const sf::Color& color, sf::Vector2f startPosition, bool wasd, sf::Texture* playerTexturePtr);
+    static void releasePlayer(Player* player);
 };
 
 #endif // PLAYER_H

@@ -4,45 +4,47 @@
 #include <SFML/Graphics.hpp>
 #include <map>
 #include <string>
-#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <type_traits>
 
+template <typename T>
 class Resource_Manager {
-private:
-    std::map<std::string, sf::Texture> textures;
-    std::map<std::string, sf::Font> fonts;
+    std::map<std::string, std::unique_ptr<T>> resources;
 
-    Resource_Manager() = default; // Singleton
+    Resource_Manager() = default;
 
 public:
+    Resource_Manager(const Resource_Manager&) = delete;
+    Resource_Manager& operator=(const Resource_Manager&) = delete;
+
+    Resource_Manager(Resource_Manager&&) = delete;
+    Resource_Manager& operator=(Resource_Manager&&) = delete;
+
     static Resource_Manager& Instance() {
         static Resource_Manager instance;
         return instance;
     }
-
-    // Delete copy constructor and assignment operator
-    Resource_Manager(const Resource_Manager&) = delete;
-    Resource_Manager& operator=(const Resource_Manager&) = delete;
-    Resource_Manager(Resource_Manager&&) = delete;
-    Resource_Manager& operator=(Resource_Manager&&) = delete;
-
-    sf::Texture& getTexture(const std::string& filePath) {
-        if (textures.find(filePath) == textures.end()) {
-            if (!textures[filePath].loadFromFile(filePath)) {
-                std::cerr << "Error loading texture: " << filePath << std::endl;
-                // Handle error: maybe return a default texture or throw exception
+    T& getResource(const std::string& filePath) {
+        if (resources.find(filePath) == resources.end()) {
+            std::unique_ptr<T> newResource = std::make_unique<T>();
+            bool loaded = false;
+            if constexpr (std::is_same_v<T, sf::Texture>) {
+                loaded = newResource->loadFromFile(filePath);
             }
-        }
-        return textures[filePath];
-    }
-
-    sf::Font& getFont(const std::string& filePath) {
-        if (fonts.find(filePath) == fonts.end()) {
-            if (!fonts[filePath].openFromFile(filePath)) {
-                std::cerr << "Error loading font: " << filePath << std::endl;
-                // Handle error: maybe return a default font or throw exception
+            else if constexpr (std::is_same_v<T, sf::Font>) {
+                loaded = newResource->openFromFile(filePath);
             }
+            else {
+                throw std::runtime_error("Unknown function to load this asset");
+            }
+            if (!loaded) {
+                throw std::runtime_error("Failed to load resource from file " + filePath);
+            }
+            resources[filePath] = std::move(newResource);
         }
-        return fonts[filePath];
+
+        return *resources[filePath];
     }
 };
 

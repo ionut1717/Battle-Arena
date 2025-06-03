@@ -34,7 +34,6 @@ add_executable(Battle-Arena
         Arena/Tiles/Teleporter_Tile.h
         Arena/Tiles/Super_Tile.cpp
         Arena/Tiles/Super_Tile.h
-        Resource_Manager.cpp
         Resource_Manager.h
         UI_Elements.cpp
         UI_Elements.h

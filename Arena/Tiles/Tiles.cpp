@@ -65,30 +65,20 @@ Tile::Tile(const Tile& other)
 void Tile::draw(sf::RenderWindow& window, int viewingPlayerID) {
     sf::Color finalDrawColor;
 
-    if (ownerPlayerID != -1) { // Tile is owned
-        if (viewingPlayerID == ownerPlayerID) { // Viewer is the owner
+    if (ownerPlayerID != -1) { 
+        if (viewingPlayerID == ownerPlayerID) {
             if (initialSpecialType != TileSpecialType::NONE) {
-                // Owner of a special tile sees its special property with a tint
                 finalDrawColor = getTileTypeColor(initialSpecialType);
             } else {
-                // Owner of a normal tile sees their claim color
                 finalDrawColor = ownerColor;
             }
-        } else { // Viewer is NOT the owner (it's owned by an opponent)
-            // Opponent always sees the owner's color, regardless of special type
+        } else {
             finalDrawColor = ownerColor;
         }
-    } else { // Tile is unowned
-        if (initialSpecialType != TileSpecialType::NONE) {
-            // Unowned special tiles are shown with their special color
+    } else {
             finalDrawColor = getTileTypeColor(initialSpecialType);
-        } else {
-            // Unowned normal tiles retain their initial pattern/texture
-            finalDrawColor = getTileTypeColor(initialSpecialType);
-        }
     }
 
-    // Apply the determined color/tint vedem daca merge aici inlocuit cu set color direct
     if (has_texture && !tileSprites.empty()) {
         tileSprites.front().setColor(finalDrawColor);
         window.draw(tileSprites.front());

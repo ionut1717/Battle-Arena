@@ -2,22 +2,16 @@
 #define ARENA_H
 
 #include <vector>
-#include <memory>   // For std::unique_ptr
-#include <random>   // For std::random_device, std::mt19937, std::uniform_real_distribution
-#include <map>      // For std::map
+#include <memory>
+#include <map>
 #include <SFML/Graphics.hpp>
-#include "Tiles/Tiles.h" // Asigură-te că acest fișier definește Tile și TileSpecialType
+#include "Tiles/Tiles.h"
 
 class Arena {
 private:
     static std::unique_ptr<Arena> instance;
-    Arena(sf::Texture& texture);
+    explicit Arena(sf::Texture& texture);
     Arena();
-    Arena(const Arena&) = delete;
-    Arena& operator=(const Arena&) = delete;
-    Arena(const Arena&&) = delete; // Folosește Arena(Arena&&) pentru move constructor
-    Arena& operator=(const Arena&&) = delete; // Folosește Arena& operator=(Arena&&) pentru move assignment
-
     static const int GridSize;
     const float teleporterTileProb;
     const float damageTileProb;
@@ -30,7 +24,11 @@ private:
     float Probability();
 
 public:
-    static Arena& getInstance(); // Poate crea o arenă fără texturi dacă e apelat primul
+    Arena(const Arena&) = delete;
+    Arena& operator=(const Arena&) = delete;
+    Arena(const Arena&&) = delete;
+    Arena& operator=(const Arena&&) = delete;
+    static Arena& getInstance();
     static Arena& getInstance(sf::Texture& texture);
 
     static int GetGridSize();

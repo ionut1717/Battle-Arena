@@ -9,10 +9,11 @@
 
 
 class SuperTile : public StickyTile, public DamageTile {
+    static float slow_down_factor;
 public:
     SuperTile(float x, float y);
     SuperTile(sf::Texture const& texture, float x, float y);
-    void static getData(float& out_slowDown, float& out_anotherValue);
+    void getData(float& out_slowDown, float& out_anotherValue);
 };
 
 
