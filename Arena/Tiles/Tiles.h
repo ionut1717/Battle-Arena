@@ -23,7 +23,7 @@ private:
     std::vector<sf::Sprite> tileSprites;
     bool has_texture;
     int ownerPlayerID = -1;
-    sf::Color ownerColor=sf::Color::White;
+    sf::Color ownerColor;
 protected:
     TileSpecialType initialSpecialType;
 public:
@@ -38,7 +38,6 @@ public:
 
     virtual void draw(sf::RenderWindow& window, int viewingPlayerID);
     void claimTile(int playerID, sf::Color pColor);
-    void setColor(const sf::Color& color);
 
     sf::Vector2f getPosition() const { return coordinates; }
     static float getSize() { return TileSize; }

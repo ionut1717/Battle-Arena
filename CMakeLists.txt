@@ -34,6 +34,10 @@ add_executable(Battle-Arena
         Arena/Tiles/Teleporter_Tile.h
         Arena/Tiles/Super_Tile.cpp
         Arena/Tiles/Super_Tile.h
+        Resource_Manager.cpp
+        Resource_Manager.h
+        UI_Elements.cpp
+        UI_Elements.h
 )
 target_compile_features(Battle-Arena PRIVATE cxx_std_17)
 target_link_libraries(Battle-Arena PRIVATE SFML::Graphics SFML::Window SFML::System)

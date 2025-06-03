@@ -18,7 +18,6 @@ sf::Color Tile::getTileTypeColor(TileSpecialType type) const {
         default: throw std::invalid_argument("Invalid special type");
     }
 }
-// Constructor for non-textured tiles
 Tile::Tile(const float x, const float y, TileSpecialType type)
     : coordinates(x, y), has_texture(false), initialSpecialType(type) {
     tileShape.setPosition(coordinates);
@@ -36,7 +35,7 @@ Tile::Tile(sf::Texture const& texture, const float x, const float y, TileSpecial
     tileShape.setSize({TileSize, TileSize});
     tileShape.setOutlineColor(sf::Color::Black);
     tileShape.setOutlineThickness(1.f);
-    tileShape.setFillColor(sf::Color::White); // Base color for outline/shadow
+    tileShape.setFillColor(sf::Color::White);
 
     sf::Sprite sprite(texture);
     float scaleX = TileSize / static_cast<float>(texture.getSize().x);
@@ -64,7 +63,7 @@ Tile::Tile(const Tile& other)
 
 
 void Tile::draw(sf::RenderWindow& window, int viewingPlayerID) {
-    sf::Color finalDrawColor = sf::Color::White; // Default for normal, unowned textured tiles
+    sf::Color finalDrawColor;
 
     if (ownerPlayerID != -1) { // Tile is owned
         if (viewingPlayerID == ownerPlayerID) { // Viewer is the owner
@@ -97,20 +96,10 @@ void Tile::draw(sf::RenderWindow& window, int viewingPlayerID) {
         tileShape.setFillColor(finalDrawColor);
         window.draw(tileShape);
     }
-
-    window.draw(tileShape);
 }
 
 
 void Tile::claimTile(int playerID, sf::Color pColor) {
     ownerPlayerID = playerID;
     ownerColor = pColor;
-}
-
-void Tile::setColor(const sf::Color& color) {
-    if (has_texture && !tileSprites.empty()) {
-        tileSprites.front().setColor(color);
-    } else {
-        tileShape.setFillColor(color);
-    }
 }

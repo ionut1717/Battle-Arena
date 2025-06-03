@@ -8,7 +8,7 @@
 #include "Sticky_Tile.h"
 
 
-class SuperTile : virtual public StickyTile, public DamageTile {
+class SuperTile : public StickyTile, public DamageTile {
 public:
     SuperTile(float x, float y);
     SuperTile(sf::Texture const& texture, float x, float y);

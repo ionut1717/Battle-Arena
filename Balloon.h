@@ -1,35 +1,40 @@
-#ifndef BALLOON_H
+#ifndef BALLOON_H // Păstrăm garda BALLOON_H dacă Game.cpp include "Balloon.h"
 #define BALLOON_H
 
 #include <SFML/Graphics.hpp>
-class Player;
 
-class AttackBalloon : public sf::CircleShape{
-    sf::CircleShape m_shape;
+class Player; // Forward declaration
+
+class AttackBalloon : public sf::CircleShape {
+private:
     const Player* m_target = nullptr;
-    sf::Vector2f coordinates;
-    float m_trackingSpeed = 250.f;
-    float m_maxSpeed = 1000.f;
-    sf::Vector2f m_initialLaunchVelocity = {0.0f, 0.0f}; // Initial velocity when launched
-    sf::Vector2f m_currentVelocity = {0.0f, 0.0f}; // Current velocity after combining launch and tracking
-    float initialLaunchDuration = 0.6f; // Duration over which initial launch velocity attenuates
+    int m_ownerID;
+    static int damage;
+    float m_trackingSpeed = 250.f; // Viteză de urmărire
+    float m_maxSpeed = 700.f;      // Viteză maximă (ajustată față de 1000.f pentru un efect poate mai bun)
+    sf::Vector2f m_initialLaunchVelocity = {0.0f, 0.0f};
+    sf::Vector2f m_currentVelocity = {0.0f, 0.0f};
+    float initialLaunchDuration = 0.5f; // Durata atenuării vitezei inițiale (ajustată)
 
-    sf::Clock lifetimeClock; // Clock to track balloon's lifespan and initial launch duration
-    static float lifespan; // Total lifespan of the balloon in seconds
-    static float radius;
+    sf::Clock lifetimeClock; // Cronometru pentru durata de viață
+
 public:
-    AttackBalloon(const sf::Color& color, sf::Vector2f startCoordinates);
+    static float lifespan; // Durata totală de viață în secunde
+    static float radius;   // Raza implicită pentru baloane
+
+    // Constructor actualizat pentru a include ownerID
+    AttackBalloon(const sf::Color& color, sf::Vector2f startCoordinates, int ownerID);
 
     void setTarget(const Player* target);
-
+    const Player* getTarget() const;
+    int getOwnerID() const;
+    static int getDamage(){return damage;};
     void launch(sf::Vector2f initialVel);
-
     void update(float deltaTime);
-
     bool isExpired() const;
 
-    // Get the radius of the balloon
-    float getRadius() const;
+    // getRadius() este moștenit și va returna raza actuală a shape-ului.
+    // Nu este nevoie de o implementare separată dacă folosim setRadius în constructor.
 };
 
 #endif // BALLOON_H

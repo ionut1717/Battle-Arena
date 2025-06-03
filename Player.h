@@ -7,8 +7,8 @@
 #include <map>
 #include <cmath>
 #include <SFML/System.hpp>
-#include <iostream> // For std::cout/cerr, can be moved if desired
-#include "Arena/Arena.h"
+#include <iostream>
+#include "Arena/Arena.h" // Necesar pentru Arena::GetGridSize() și Tile::getSize()
 
 // Enum pentru a mapa mai ușor direcțiile de animație la un index
 enum AnimationDirection {
@@ -17,25 +17,26 @@ enum AnimationDirection {
     AnimRight,
     AnimUpRight,
     AnimUp,
-    AnimUpLeft,   // Acestea vor fi oglindite
-    AnimLeft,     // Acestea vor fi oglindite
-    AnimDownLeft  // Acestea vor fi oglindite
+    AnimUpLeft,
+    AnimLeft,
+    AnimDownLeft,
+    AnimCount
 };
 
 class Player {
-private: // Moved private members here for clarity
+private:
     int playerID;
-    unsigned int PlayerHealth = 100;
-    sf::Color color; // Culoarea inițială, acum mai puțin relevantă pentru sprite
+    int playerHealth = 100;
+    sf::Color color;
     sf::Vector2f coordinates;
-    const float PlayerSpeed = 250.0f;
+    const float playerSpeed = 250.0f;
     sf::Vector2f velocity;
     std::map<sf::Keyboard::Key, bool> keysPressed;
     bool wasd;
     bool isEliminated = false;
-    float playerRadius = 10.0f; // Radiusul e încă util pentru coliziuni, chiar și cu sprite
+    float playerRadius;
     bool isStuck = false;
-    const float stuckSpeedFactor = 0.1f;
+    const float stuckSpeedFactor = 0.2f;
     bool isOnDamageTile = false;
     sf::Clock damageTickClock;
     const float damageTickRate = 1.0f;
@@ -44,67 +45,56 @@ private: // Moved private members here for clarity
 
     sf::Vector2i lastGridPosition = {-1, -1};
 
-    // --- Noi membri pentru animație ---
-    sf::Texture playerTexture;
+    sf::Texture& playerTexture; // Referință la textură
     sf::Sprite playerSprite;
     sf::Clock animationClock;
-    float animationFrameTime = 1.0f / 10.0f; // 10 FPS
+    float animationFrameTime = 1.0f / 10.0f; // 10 frame-uri pe secundă
     int currentFrame = 0;
-    // Mapa pentru a stoca cadrele de animație pentru fiecare direcție
     std::map<AnimationDirection, std::vector<sf::IntRect>> animationFrames;
-    AnimationDirection currentAnimationDirection = AnimDown; // Direcția implicită
+    AnimationDirection currentAnimationDirection = AnimDown;
     bool isMoving = false;
-    bool facingLeft = false; // Pentru a ști dacă trebuie să oglindim sprite-ul
+    bool facingLeft = false;
 
-    // Dimensiunea unui singur cadru din sprite sheet
-    static constexpr int FRAME_WIDTH = 128;
-    static constexpr int FRAME_HEIGHT = 128;
+    // Dimensiunea unui frame în fișierul textură (celula spritesheet-ului)
+    static constexpr int m_frameSize = 128;
+    // Dimensiunea țintă a playerului pe ecran (m_tileSize va fi 4 * Tile::getSize() = 200)
+    float m_tileSize; // Inițializat în constructor
 
-    // Adaugă o variabilă membru pentru factorul de scalare
-    float currentScaleFactor; // Va stoca factorul de scalare aplicat
+    // NOU: Dimensiunea vizuală efectivă a caracterului pe ecran (fără spațiul transparent)
+    float m_characterVisualSize; // Ex: va fi 100.0f dacă sprite-ul e de 2 ori mai mic decât hitbox-ul de 200
 
+    sf::Clock paintCooldownClock;
+    const float paintCooldownTime = 3.0f;
 
-    // Metodă helper pentru a calcula sf::IntRect
     sf::IntRect getFrameRect(int row, int col);
-
-    // Metodă helper pentru a popula cadrele de animație
     void setupAnimationFrames();
-
-    // Metodă pentru a determina direcția de animație pe baza vectorului de viteză
     void determineAnimationDirection(sf::Vector2f currentVelocity);
-
     void updateAnimation();
 
 public:
-    // Constructor
-    Player(const int playerID, const sf::Color color, const sf::Vector2f startPosition, const bool wasd, sf::Texture PlayerTexture);
+    Player(int playerID, const sf::Color& color, sf::Vector2f startPosition, bool wasd, sf::Texture& playerTextureRef);
 
-    // Destructor (if needed, otherwise default is fine)
-    ~Player() = default;
-
-    // Core Gameplay methods
-    int GetPlayerID();
-    void GetDamageBalloon();
-    void set_key_pressed(const sf::Keyboard::Key key, const bool pressed);
+    int getPlayerID() const;
+    void getDamageBalloon();
+    void setKeyPressed(sf::Keyboard::Key key, bool pressed);
     float getActualPlayerSpeed() const;
-    void update_position(float deltaTime);
-    void draw(sf::RenderWindow& window);
+    void updatePosition(float deltaTime);
+    void draw(sf::RenderWindow& window) const; // Am asumat că ai adăugat const
     sf::FloatRect getBounds() const;
     sf::Vector2f getPosition() const;
     unsigned int getHealth() const;
     bool isEliminatedPlayer() const;
     float getRadius() const;
     sf::Vector2f getVelocity() const;
+    sf::Color getColor() const;
 
-    // Tile Interaction methods
-    void paintNearbyTiles(std::vector<std::vector<std::unique_ptr<Tile>>>& grid, const float radius);
-    Player* getPlayer(); // Consider if this is truly necessary, often 'this' pointer is enough
+    sf::Vector2f getLaunchDirection() const;
+    bool isFacingLeft() const;
+    AnimationDirection getCurrentAnimationDirection() const;
 
-    void heal(float value) {
-        PlayerHealth += value;
-        if (PlayerHealth+value>100)
-            PlayerHealth = 100;
-    };
+    void paintNearbyTiles(std::vector<std::vector<std::unique_ptr<Tile>>>& grid, float radius);
+
+    void heal(float value);
     void setStuck(bool stuck);
     bool getIsStuck() const;
     void setPosition(sf::Vector2f newPos);
@@ -118,7 +108,6 @@ public:
     sf::Vector2i getLastGridPosition() const;
     void setLastGridPosition(sf::Vector2i pos);
     void resetHealthAndState();
-    sf::Color getColor();
 };
 
-#endif //PLAYER_H
+#endif // PLAYER_H

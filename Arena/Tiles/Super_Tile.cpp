@@ -13,7 +13,7 @@ SuperTile::SuperTile(float x, float y)
 // SuperTile constructor for textured tiles
 SuperTile::SuperTile(sf::Texture const& texture, float x, float y)
     : Tile(texture, x, y, TileSpecialType::SUPER), // Initialize the virtual base Tile
-      StickyTile(texture, x, y),  // Initialize StickyTile part
+      StickyTile(texture, x, y),
       DamageTile(texture, x, y) { // Initialize DamageTile part
     initialSpecialType = TileSpecialType::SUPER;
     // Culoarea va fi setată de Tile::getTileTypeColor(SUPER)

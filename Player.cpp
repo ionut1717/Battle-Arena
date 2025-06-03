@@ -1,41 +1,33 @@
 #include "Player.h"
-#include "Arena/Tiles/Tiles.h"
+
+#include <algorithm>
+#include <iostream>
+#include "Arena/Tiles/Tiles.h" // Necesar pentru Tile::getSize()
+#include "Resource_Manager.h"
+#include <cmath>
+
+#include "Balloon.h" // Necesar pentru AttackBalloon::getDamage()
 
 // Helper method to calculate sf::IntRect
 sf::IntRect Player::getFrameRect(int row, int col) {
-    return sf::IntRect({col * FRAME_WIDTH, row * FRAME_HEIGHT}, {FRAME_WIDTH, FRAME_HEIGHT});
+    return sf::IntRect({static_cast<int>(col * m_frameSize), static_cast<int>(row * m_frameSize)}, {static_cast<int>(m_frameSize), static_cast<int>(m_frameSize)});
 }
 
 // Helper method to populate animation frames
 void Player::setupAnimationFrames() {
-    // Down: Row 1, columns 1-4.
-    animationFrames[AnimDown] = {
-        getFrameRect(0, 0), getFrameRect(0, 1), getFrameRect(0, 2), getFrameRect(0, 3)
-    };
-    // Down-Right: Row 1, columns 5-8.
-    animationFrames[AnimDownRight] = {
-        getFrameRect(0, 4), getFrameRect(0, 5), getFrameRect(0, 6), getFrameRect(0, 7)
-    };
-    // Right: Row 1, column 9 + Row 2, columns 1-3.
-    animationFrames[AnimRight] = {
-        getFrameRect(0, 8), getFrameRect(1, 0), getFrameRect(1, 1), getFrameRect(1, 2)
-    };
-    // Up: Row 2, columns 4-7.
-    animationFrames[AnimUp] = {
-        getFrameRect(1, 3), getFrameRect(1, 4), getFrameRect(1, 5), getFrameRect(1, 6)
-    };
-    // Up-Right: Row 2, columns 8-9 + Row 3, columns 1-2.
-    animationFrames[AnimUpRight] = {
-        getFrameRect(1, 7), getFrameRect(1, 8), getFrameRect(2, 0), getFrameRect(2, 1)
-    };
+    animationFrames[AnimDown]      = { getFrameRect(0,0), getFrameRect(0,1), getFrameRect(0,2), getFrameRect(0,3) };
+    animationFrames[AnimDownRight] = { getFrameRect(0,4), getFrameRect(0,5), getFrameRect(0,6), getFrameRect(0,7) };
+    animationFrames[AnimRight]     = { getFrameRect(0,8), getFrameRect(1,0), getFrameRect(1,1), getFrameRect(1,2) };
+    animationFrames[AnimUpRight]   = { getFrameRect(1,7), getFrameRect(1,8), getFrameRect(2,0), getFrameRect(2,1) };
+    animationFrames[AnimUp]        = { getFrameRect(1,3), getFrameRect(1,4), getFrameRect(1,5), getFrameRect(1,6) };
 
-    // For left-facing directions, we use the right-facing frames and flip the sprite.
-    animationFrames[AnimDownLeft] = animationFrames[AnimDownRight];
-    animationFrames[AnimLeft] = animationFrames[AnimRight];
-    animationFrames[AnimUpLeft] = animationFrames[AnimUpRight];
+    // Using existing animations for mirrored directions
+    animationFrames[AnimDownLeft]  = animationFrames[AnimDownRight];
+    animationFrames[AnimLeft]      = animationFrames[AnimRight];
+    animationFrames[AnimUpLeft]    = animationFrames[AnimUpRight];
 }
 
-// Method to determine animation direction based on velocity vector
+
 void Player::determineAnimationDirection(sf::Vector2f currentVelocity) {
     if (currentVelocity.x == 0 && currentVelocity.y == 0) {
         isMoving = false;
@@ -43,92 +35,76 @@ void Player::determineAnimationDirection(sf::Vector2f currentVelocity) {
     }
     isMoving = true;
 
-    // Use currentVelocity parameter
-    if (currentVelocity.x > 0 && currentVelocity.y == 0) { // 0 degrees: Right
-        currentAnimationDirection = AnimRight;
-        facingLeft = false;
-    } else if (currentVelocity.x > 0 && currentVelocity.y < 0) { // Up-Right
-        currentAnimationDirection = AnimUpRight;
-        facingLeft = false;
-    } else if (currentVelocity.x == 0 && currentVelocity.y < 0) { // 90 degrees: Up
-        currentAnimationDirection = AnimUp;
-        facingLeft = false;
-    } else if (currentVelocity.x < 0 && currentVelocity.y < 0 ) { // Up-Left
-        currentAnimationDirection = AnimUpLeft;
-        facingLeft = true;
-    } else if (currentVelocity.x < 0 && currentVelocity.y == 0) { // 180 degrees: Left
-        currentAnimationDirection = AnimLeft;
-        facingLeft = true;
-    } else if (currentVelocity.x < 0  && currentVelocity.y > 0) { // Down-Left
-        currentAnimationDirection = AnimDownLeft;
-        facingLeft = true;
-    } else if (currentVelocity.x == 0 && currentVelocity.y > 0) { // 270 degrees: Down
-        currentAnimationDirection = AnimDown;
-        facingLeft = false;
-    } else if (currentVelocity.x >= 0 && currentVelocity.y > 0) { // Down-Right
-        currentAnimationDirection = AnimDownRight;
-        facingLeft = false;
-    }
+    if (currentVelocity.x > 0 && currentVelocity.y == 0)      { currentAnimationDirection = AnimRight;     facingLeft = false; }
+    else if (currentVelocity.x > 0 && currentVelocity.y < 0)  { currentAnimationDirection = AnimUpRight;   facingLeft = false; }
+    else if (currentVelocity.x == 0 && currentVelocity.y < 0) { currentAnimationDirection = AnimUp;        facingLeft = false; }
+    else if (currentVelocity.x < 0 && currentVelocity.y < 0 ) { currentAnimationDirection = AnimUpLeft;    facingLeft = true;  }
+    else if (currentVelocity.x < 0 && currentVelocity.y == 0) { currentAnimationDirection = AnimLeft;      facingLeft = true;  }
+    else if (currentVelocity.x < 0  && currentVelocity.y > 0){ currentAnimationDirection = AnimDownLeft;  facingLeft = true;  }
+    else if (currentVelocity.x == 0 && currentVelocity.y > 0) { currentAnimationDirection = AnimDown;      facingLeft = false; }
+    else if (currentVelocity.x > 0 && currentVelocity.y > 0)  { currentAnimationDirection = AnimDownRight; facingLeft = false; }
 }
 
+
 void Player::updateAnimation() {
+    // Factorul de scalare pe baza dimensiunii țintă (m_tileSize) și a dimensiunii frame-ului (m_frameSize)
+    float scaleFactor = m_tileSize / static_cast<float>(m_frameSize);
+
+    // Setăm scara și originea. Originea trebuie să fie mereu la jumătatea dimensiunii _originale_ a frame-ului.
+    // Flip-ul se realizează prin scalarea negativă pe X.
+    if (facingLeft) {
+        playerSprite.setOrigin({static_cast<float>(m_frameSize) / 2.0f, static_cast<float>(m_frameSize) / 2.0f});
+        playerSprite.setScale({-scaleFactor, scaleFactor});
+    } else {
+        playerSprite.setOrigin({static_cast<float>(m_frameSize) / 2.0f, static_cast<float>(m_frameSize) / 2.0f});
+        playerSprite.setScale({scaleFactor, scaleFactor});
+    }
+
+
     if (!isMoving) {
-        // If not moving, display the first frame of the current direction (or AnimDown if empty)
         if (!animationFrames[currentAnimationDirection].empty()) {
             playerSprite.setTextureRect(animationFrames[currentAnimationDirection][0]);
         }
-        currentFrame = 0; // Reset frame when stopping
-        animationClock.restart(); // Restart clock to begin animation from start when movement resumes
-    } else { // Only if moving, advance the animation
+        currentFrame = 0; // Resetează la primul frame când nu se mișcă
+        animationClock.restart();
+    } else {
         if (animationClock.getElapsedTime().asSeconds() >= animationFrameTime) {
-            currentFrame = (currentFrame + 1) % animationFrames[currentAnimationDirection].size();
-            playerSprite.setTextureRect(animationFrames[currentAnimationDirection][currentFrame]);
+            if (!animationFrames[currentAnimationDirection].empty()) {
+                 currentFrame = (currentFrame + 1) % animationFrames[currentAnimationDirection].size();
+                 playerSprite.setTextureRect(animationFrames[currentAnimationDirection][currentFrame]);
+            }
             animationClock.restart();
         }
-    }
-
-    // Apply scaling and mirroring if necessary
-    if (facingLeft) {
-        playerSprite.setScale({-currentScaleFactor, currentScaleFactor}); // Use currentScaleFactor
-        // Adjust origin for mirroring to keep position correct
-        playerSprite.setOrigin({FRAME_WIDTH - (FRAME_WIDTH / 2.0f), FRAME_HEIGHT / 2.0f});
-    } else {
-        playerSprite.setScale({currentScaleFactor, currentScaleFactor}); // Use currentScaleFactor
-        playerSprite.setOrigin({FRAME_WIDTH / 2.0f, FRAME_HEIGHT / 2.0f});
     }
 }
 
 
-// Constructor
-Player::Player(const int playerID, const sf::Color color, const sf::Vector2f startPosition, const bool wasd, sf::Texture PlayerTexture)
-    : playerID(playerID), color(color), coordinates(startPosition), wasd(wasd), playerSprite(PlayerTexture) {
 
-    currentScaleFactor = 0.5f; // Set desired scale factor (0.5 = half size)
+Player::Player(int playerID, const sf::Color& color, sf::Vector2f startPosition, bool wasd, sf::Texture& playerTextureRef)
+    : playerID(playerID), color(color), coordinates(startPosition), wasd(wasd),
+      playerTexture(playerTextureRef),
+      playerSprite(this->playerTexture)
+{
+    m_tileSize = 4 * Tile::getSize(); // Playerul vizual este de 200x200 (4 * 50)
 
-    // Load specific player texture based on ID
-    std::string texturePath;
-    if (playerID == 1) {
-        texturePath = "hero.png"; // Assuming "hero.png" is in the same directory as the executable, or relative path
-    } else {
-        texturePath = "base_character.png"; // Assuming "base_character.png" is in the same directory as the executable
-    }
+    // Calculăm m_characterVisualSize pe baza observației că sprite-ul vizual este de 2 ori mai mic
+    // decât dimensiunea la care este scalat m_tileSize (200x200), deci 100x100.
+    m_characterVisualSize = m_tileSize / 2.0f; // 200 / 2 = 100
 
-    if (!playerTexture.loadFromFile(texturePath)) {
-        std::cerr << "Error: Could not load player texture for player " << playerID << " from " << texturePath << std::endl;
-    }
-    playerSprite.setTexture(playerTexture);
-    playerSprite.setOrigin({FRAME_WIDTH / 2.0f, FRAME_HEIGHT / 2.0f}); // Set origin to center
-    playerSprite.setPosition(coordinates); // Initial sprite position
+    setupAnimationFrames();
 
-    playerSprite.setScale({currentScaleFactor, currentScaleFactor});
-    playerRadius = (FRAME_WIDTH * currentScaleFactor) / 2.0f; // Adjust radius for collision
-
-    setupAnimationFrames(); // Populate animation frames map
-    // Set initial sprite frame
     if (!animationFrames[currentAnimationDirection].empty()) {
         playerSprite.setTextureRect(animationFrames[currentAnimationDirection][0]);
     }
 
+    updateAnimation(); // Aplică scalarea și originea
+
+    playerSprite.setPosition(coordinates);
+
+    // Raza playerului se calculează direct din dimensiunea vizuală efectivă a caracterului
+    playerRadius = m_characterVisualSize / 2.0f; // 100 / 2 = 50
+
+    // Inițializare keysPressed
     if (wasd) {
         keysPressed[sf::Keyboard::Key::A] = false;
         keysPressed[sf::Keyboard::Key::S] = false;
@@ -140,31 +116,48 @@ Player::Player(const int playerID, const sf::Color color, const sf::Vector2f sta
         keysPressed[sf::Keyboard::Key::Up] = false;
         keysPressed[sf::Keyboard::Key::Down] = false;
     }
+
     velocity = {0.0f, 0.0f};
+
+    // --- ADAUGĂ ACESTE LINII PENTRU DEBUGGING (OPȚIONAL) ---
+    // Pot fi utile pentru a verifica valorile după modificări
+    sf::FloatRect debug_localBounds = playerSprite.getLocalBounds();
+    sf::FloatRect debug_globalBounds = playerSprite.getGlobalBounds();
+
+    std::cout << "Player " << playerID << " Initialization Debugging:" << std::endl;
+    std::cout << "  m_frameSize (from Player.h): " << m_frameSize << std::endl;
+    std::cout << "  Tile::getSize(): " << Tile::getSize() << std::endl;
+    std::cout << "  m_tileSize (target visual size for full sprite): " << m_tileSize << std::endl;
+    std::cout << "  m_characterVisualSize (effective character size): " << m_characterVisualSize << std::endl;
+    std::cout << "  playerSprite.getLocalBounds() (texture rect size): Width=" << debug_localBounds.size.x << ", Height=" << debug_localBounds.size.y << std::endl;
+    std::cout << "  playerSprite.getGlobalBounds() (scaled sprite size with padding): Width=" << debug_globalBounds.size.x << ", Height=" << debug_globalBounds.size.y << std::endl;
+    std::cout << "  Calculated playerRadius: " << playerRadius << std::endl;
+    std::cout << "------------------------------------------" << std::endl;
+    // ---------------------------------------------
 }
 
+int Player::getPlayerID() const { return playerID; }
 
-int Player::GetPlayerID() { return playerID; }
-
-void Player::GetDamageBalloon() {
-    if (PlayerHealth <= 10) {
+void Player::getDamageBalloon() {
+    int damage = AttackBalloon::getDamage();
+    if (playerHealth <= damage) {
+        playerHealth = 0;
         isEliminated = true;
-        PlayerHealth = 0;
         std::cout << "Player " << playerID << " a fost eliminat de un balon!" << std::endl;
     } else {
-        PlayerHealth -= 10;
+        playerHealth -= damage;
     }
 }
 
-void Player::set_key_pressed(const sf::Keyboard::Key key, const bool pressed) {
+void Player::setKeyPressed(const sf::Keyboard::Key key, const bool pressed) {
     keysPressed[key] = pressed;
 }
 
 float Player::getActualPlayerSpeed() const {
-    return isStuck ? PlayerSpeed * stuckSpeedFactor : PlayerSpeed;
+    return isStuck ? playerSpeed * stuckSpeedFactor : playerSpeed;
 }
 
-void Player::update_position(float deltaTime) {
+void Player::updatePosition(float deltaTime) {
     sf::Vector2f currentInputDirection = {0.0f, 0.0f};
 
     if (wasd) {
@@ -178,176 +171,224 @@ void Player::update_position(float deltaTime) {
         if (keysPressed[sf::Keyboard::Key::Up]) currentInputDirection.y -= 1.0f;
         if (keysPressed[sf::Keyboard::Key::Down]) currentInputDirection.y += 1.0f;
     }
-    // Normalize movement
+
     float length = std::sqrt(currentInputDirection.x * currentInputDirection.x + currentInputDirection.y * currentInputDirection.y);
     if (length > 0.0f) {
         velocity = (currentInputDirection / length) * getActualPlayerSpeed();
-        determineAnimationDirection(velocity); // Determine animation direction
     } else {
         velocity = {0.0f, 0.0f};
-        isMoving = false; // Not moving, stop animation
     }
+
+    determineAnimationDirection(length > 0.0f ? velocity : currentInputDirection);
+
 
     coordinates += velocity * deltaTime;
-    playerSprite.setPosition(coordinates); // Update sprite position
 
-    int grid_size = Arena::GetGridSize();
-    float tile_size = Tile::getSize();
 
-    // Adjust collision with borders based on scaled sprite size
-    sf::FloatRect bounds = playerSprite.getGlobalBounds();
-    float halfWidth = bounds.size.x / 2.0f;
-    float halfHeight = bounds.size.y / 2.0f;
+    int gridSize = Arena::GetGridSize();
+    // Dimensiunea efectiva a playerului pe ecran este m_characterVisualSize
+    float halfEffectiveSize = m_characterVisualSize / 2.0f;
 
-    // Left limit
-    if (coordinates.x < halfWidth) {
-        coordinates.x = halfWidth;
-    }
-    // Right limit
-    else if (coordinates.x > static_cast<float>(grid_size) * tile_size - halfWidth) {
-        coordinates.x = static_cast<float>(grid_size) * tile_size - halfWidth;
-    }
+    // Ajustează limitele de coliziune cu marginile ecranului bazate pe m_characterVisualSize
+    coordinates.x = std::clamp(coordinates.x, halfEffectiveSize, static_cast<float>(gridSize) * Tile::getSize() - halfEffectiveSize);
+    coordinates.y = std::clamp(coordinates.y, halfEffectiveSize, static_cast<float>(gridSize) * Tile::getSize() - halfEffectiveSize);
 
-    // Top limit
-    if (coordinates.y < halfHeight) {
-        coordinates.y = halfHeight;
-    }
-    // Bottom limit
-    else if (coordinates.y > static_cast<float>(grid_size) * tile_size - halfHeight) {
-        coordinates.y = static_cast<float>(grid_size) * tile_size - halfHeight;
-    }
-
-    updateAnimation(); // Update animation
+    playerSprite.setPosition(coordinates);
+    updateAnimation(); // Always call updateAnimation after setting position
 }
 
-void Player::draw(sf::RenderWindow& window) {
+void Player::draw(sf::RenderWindow& window) const { // Trebuie să fie const dacă e apelată pe referințe const
     if (!isEliminated) {
-        window.draw(playerSprite); // Draw sprite instead of circle
+        window.draw(playerSprite);
     }
 }
 
 sf::FloatRect Player::getBounds() const {
-    // Now return sprite bounds for more precise collision
-    return playerSprite.getGlobalBounds();
+    // NOU: Returnează un sf::FloatRect bazat pe dimensiunea vizuală efectivă a caracterului
+    // Centrul sprite-ului este la `coordinates`.
+    // Lățimea și înălțimea sunt `m_characterVisualSize`.
+    return sf::FloatRect({coordinates.x - m_characterVisualSize / 2.0f,
+                         coordinates.y - m_characterVisualSize / 2.0f},
+                         {m_characterVisualSize, m_characterVisualSize});
 }
 
 sf::Vector2f Player::getPosition() const { return coordinates; }
-unsigned int Player::getHealth() const { return PlayerHealth; }
+unsigned int Player::getHealth() const { return playerHealth; }
 bool Player::isEliminatedPlayer() const { return isEliminated; }
 float Player::getRadius() const { return playerRadius; }
 sf::Vector2f Player::getVelocity() const { return velocity; }
+sf::Color Player::getColor() const { return color; }
 
-void Player::paintNearbyTiles(std::vector<std::vector<std::unique_ptr<Tile>>>& grid, const float radius) {
-    float tileSize = Tile::getSize();
+
+sf::Vector2f Player::getLaunchDirection() const {
+    sf::Vector2f direction = {0.0f, 0.0f};
+    float speed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+
+    if (speed > 0.1f) { // If there's significant current movement, use that direction
+        direction = velocity / speed;
+        return direction;
+    }
+
+    // Otherwise, use the last animation direction for launching
+    switch (currentAnimationDirection) {
+        case AnimDown:      direction = {0.0f, 1.0f}; break;
+        case AnimDownRight: direction = {1.0f, 1.0f}; break;
+        case AnimRight:     direction = {1.0f, 0.0f}; break;
+        case AnimUpRight:   direction = {1.0f, -1.0f}; break;
+        case AnimUp:        direction = {0.0f, -1.0f}; break;
+        case AnimUpLeft:    direction = {-1.0f, -1.0f}; break;
+        case AnimLeft:      direction = {-1.0f, 0.0f}; break;
+        case AnimDownLeft:  direction = {-1.0f, 1.0f}; break;
+        case AnimCount:     // Fallthrough
+        default:
+            // Fallback for cases where animation direction might not be set or is default
+            if (facingLeft) { direction = {-1.0f, 0.0f}; }
+            else { direction = {1.0f, 0.0f}; } // Default to right
+
+            // Further fallback if still (0,0) - e.g., if player was spawned without movement
+            if (direction.x == 0.0f && direction.y == 0.0f) {
+                 direction = {0.0f, 1.0f}; // Default to down
+            }
+            break;
+    }
+
+    // Normalize the direction vector
+    float dirLength = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+    if (dirLength > 0.001f) {
+        direction /= dirLength;
+    } else {
+        direction = {0.0f, 1.0f}; // Fallback to down if still zero length
+    }
+    return direction;
+}
+
+bool Player::isFacingLeft() const {
+    return facingLeft;
+}
+
+AnimationDirection Player::getCurrentAnimationDirection() const {
+    return currentAnimationDirection;
+}
+
+void Player::paintNearbyTiles(std::vector<std::vector<std::unique_ptr<Tile>>>& grid, const float radius_factor) {
+    if (paintCooldownClock.getElapsedTime().asSeconds() < paintCooldownTime) {
+        std::cout << "Player " << playerID << " cooldown activ pentru colorare. Mai asteapta "
+                  << paintCooldownTime - paintCooldownClock.getElapsedTime().asSeconds() << " secunde."
+                  << std::endl;
+        return;
+    }
+
+    // Folosim m_characterVisualSize pentru a calcula raza de vopsire
     sf::Vector2f playerCenter = coordinates;
-    // Ensure grid is not empty before accessing grid[0]
-    int gridWidth = grid.empty() ? 0 : grid[0].size();
-    int gridHeight = grid.size();
 
-    float worldRadius = radius * tileSize;
+    // Radius in world units (pixels)
+    float worldRadius = radius_factor * m_characterVisualSize; // Acum se bazează pe m_characterVisualSize
 
-    for (int i = 0; i < gridHeight; ++i) {
-        for (int j = 0; j < gridWidth; ++j) {
-            // Access the Tile by dereferencing unique_ptr
-            Tile& tile = *grid[i][j];
-            sf::Vector2f tile_position = tile.getPosition();
-            sf::Vector2f tileCenter = tile_position + sf::Vector2f(tileSize / 2.0f, tileSize / 2.0f);
+    // Calculate the tile range to iterate over
+    int minTileX = std::max(0, static_cast<int>((playerCenter.x - worldRadius) / Tile::getSize()));
+    int maxTileX = std::min(static_cast<int>(grid[0].size() -1) , static_cast<int>((playerCenter.x + worldRadius) / Tile::getSize()));
+    int minTileY = std::max(0, static_cast<int>((playerCenter.y - worldRadius) / Tile::getSize()));
+    int maxTileY = std::min(static_cast<int>(grid.size() - 1), static_cast<int>((playerCenter.y + worldRadius) / Tile::getSize()));
 
-            float dx = tileCenter.x - playerCenter.x;
-            float dy = tileCenter.y - playerCenter.y;
-            if (dx * dx + dy * dy <= worldRadius * worldRadius) {
-                // Call the claimTile method from Tile.h
-                tile.claimTile(playerID, color);
+
+    for (int y = minTileY; y <= maxTileY; ++y) {
+        for (int x = minTileX; x <= maxTileX; ++x) {
+            // Check if tile is within grid boundaries
+            if (y >= 0 && static_cast<size_t>(y) < grid.size() && x >= 0 && static_cast<size_t>(x) < grid[y].size()) {
+                Tile& tile = *grid[y][x];
+                sf::Vector2f tileCenter = tile.getPosition() + sf::Vector2f(Tile::getSize() / 2.0f, Tile::getSize() / 2.0f);
+
+                // Check distance from player center to tile center
+                float dx = tileCenter.x - playerCenter.x;
+                float dy = tileCenter.y - playerCenter.y;
+                if (dx * dx + dy * dy <= worldRadius * worldRadius) {
+                    tile.claimTile(playerID, color);
+                }
             }
         }
     }
+    paintCooldownClock.restart();
 }
 
-Player* Player::getPlayer() {
-    return this;
-}
-sf::Color Player::getColor() {
-    return color;
-}
-void Player::setStuck(bool stuck) {
-    isStuck = stuck;
-}
-bool Player::getIsStuck() const {
-    return isStuck;
+void Player::heal(float value) {
+    playerHealth += static_cast<unsigned int>(value);
+    if (playerHealth > 100) {
+        playerHealth = 100;
+    }
 }
 
+void Player::setStuck(bool stuck) { isStuck = stuck; }
+bool Player::getIsStuck() const { return isStuck; }
 void Player::setPosition(sf::Vector2f newPos) {
     coordinates = newPos;
-    playerSprite.setPosition(coordinates); // Update the sprite position as well
+    playerSprite.setPosition(coordinates);
+    // Reset relevant states on reposition
     setOnDamageTile(false);
     setStuck(false);
     tookInitialDamage = false;
-    lastGridPosition = {-1, -1};
+    lastGridPosition = {-1, -1}; // Consider resetting lastGridPosition
 }
-
 void Player::setOnDamageTile(bool onTile) {
     isOnDamageTile = onTile;
     if (!onTile) {
         tookInitialDamage = false;
     }
 }
-bool Player::getIsOnDamageTile() const {
-    return isOnDamageTile;
-}
+bool Player::getIsOnDamageTile() const { return isOnDamageTile; }
 
 void Player::takeInitialDamage() {
-    if (!tookInitialDamage && PlayerHealth > 0) {
-        PlayerHealth -= damageAmountPerTick;
+    if (!tookInitialDamage && playerHealth > 0) {
+        if (playerHealth <= static_cast<unsigned int>(damageAmountPerTick)) {
+            playerHealth = 0;
+            isEliminated = true;
+        } else {
+            playerHealth -= damageAmountPerTick;
+        }
         tookInitialDamage = true;
-        std::cout << "Player " << playerID << " a luat " << damageAmountPerTick << " damage INITIAL de la tile! Viata: " << PlayerHealth << std::endl;
-        if (PlayerHealth <= 0) {
-            isEliminated = true;
-            PlayerHealth = 0;
-            std::cout << "Player " << playerID << " a fost eliminat de un tile de damage!" << std::endl;
+        std::cout << "Player " << playerID << " took " << damageAmountPerTick << " INITIAL damage from tile! Health: " << playerHealth << std::endl;
+        if (isEliminated) {
+            std::cout << "Player " << playerID << " was eliminated by a damage tile!" << std::endl;
         }
     }
 }
-
 void Player::takeContinuousDamage() {
-    if (PlayerHealth > 0) {
-        PlayerHealth -= damageAmountPerTick;
-        std::cout << "Player " << playerID << " a luat " << damageAmountPerTick << " damage CONTINUU de la tile! Viata: " << PlayerHealth << std::endl;
-        if (PlayerHealth <= 0) {
+    if (playerHealth > 0) {
+         if (playerHealth <= static_cast<unsigned int>(damageAmountPerTick)) {
+            playerHealth = 0;
             isEliminated = true;
-            PlayerHealth = 0;
-            std::cout << "Player " << playerID << " a fost eliminat de un tile de damage!" << std::endl;
+        } else {
+            playerHealth -= damageAmountPerTick;
+        }
+        std::cout << "Player " << playerID << " took " << damageAmountPerTick << " CONTINUOUS damage from tile! Health: " << playerHealth << std::endl;
+        if (isEliminated) {
+            std::cout << "Player " << playerID << " was eliminated by a damage tile!" << std::endl;
         }
     }
 }
 
-float Player::getDamageTickRate() const {
-    return damageTickRate;
-}
-sf::Time Player::getDamageElapsedTime() const {
-    return damageTickClock.getElapsedTime();
-}
-void Player::restartDamageTickClock() {
-    damageTickClock.restart();
-}
+float Player::getDamageTickRate() const { return damageTickRate; }
+sf::Time Player::getDamageElapsedTime() const { return damageTickClock.getElapsedTime(); }
+void Player::restartDamageTickClock() { damageTickClock.restart(); }
 
-sf::Vector2i Player::getLastGridPosition() const {
-    return lastGridPosition;
-}
-void Player::setLastGridPosition(sf::Vector2i pos) {
-    lastGridPosition = pos;
-}
+sf::Vector2i Player::getLastGridPosition() const { return lastGridPosition; }
+void Player::setLastGridPosition(sf::Vector2i pos) { lastGridPosition = pos; }
+
 void Player::resetHealthAndState() {
-    PlayerHealth = 100;
+    playerHealth = 100;
     isEliminated = false;
     isStuck = false;
     isOnDamageTile = false;
     tookInitialDamage = false;
-
     lastGridPosition = {-1, -1};
-    velocity = {0.0f, 0.0f}; // Reset velocity
-    currentFrame = 0; // Reset animation frame
-    currentAnimationDirection = AnimDown; // Reset animation direction
+    velocity = {0.0f, 0.0f};
+    currentFrame = 0;
+    currentAnimationDirection = AnimDown;
     isMoving = false;
     facingLeft = false;
-    playerSprite.setScale({currentScaleFactor, currentScaleFactor}); // Apply scale factor on reset
+
+    // Ensure initial frame and properties are set after reset
+    if (!animationFrames[currentAnimationDirection].empty()) {
+        playerSprite.setTextureRect(animationFrames[currentAnimationDirection][0]);
+    }
+    updateAnimation(); // Apply scaling and origin based on current state and tile size
 }
