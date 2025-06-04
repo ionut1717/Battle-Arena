@@ -36,7 +36,7 @@ Arena::Arena(sf::Texture& texture) :
     damageTileProb(0.02f),
     stickyTileProb(0.02f),
     healingTileProb(0.005f),
-    superTileProb(0.01f)
+    superTileProb(0.002)
 {
     float tileSize = Tile::getSize();
     Grid.resize(GridSize);

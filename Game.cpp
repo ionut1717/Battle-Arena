@@ -224,22 +224,11 @@ void Game_Engine::GameLoop() {
 
     Player* player1 = Player::acquirePlayer(1, sf::Color::Blue, {p1StartX, p1StartY}, true, &playerTexture1);
     Player* player2 = Player::acquirePlayer(2, sf::Color::Cyan, {p2StartX, p2StartY}, false, &playerTexture2);
-
-    auto resetGameState = [&]() {
-        if (player1) Player::releasePlayer(player1);
-        if (player2) Player::releasePlayer(player2);
-        player1 = Player::acquirePlayer(1, sf::Color::Blue, {p1StartX, p1StartY}, true, &playerTexture1);
-        player2 = Player::acquirePlayer(2, sf::Color::Cyan, {p2StartX, p2StartY}, false, &playerTexture2);
-
-        activeBalloons.clear();
-        gameEnded = false;
-        currentWinMessage.clear();
-        gameClock.restart();
-        spawnClock.restart();
-    };
-
-    resetGameState();
-
+    activeBalloons.clear();
+    gameEnded = false;
+    currentWinMessage.clear();
+    gameClock.restart();
+    spawnClock.restart();
     sf::View view1, view2;
     float viewHalfWidth = static_cast<float>(windowWidth) / 2.0f;
     float viewHeight = static_cast<float>(windowHeight);
@@ -304,7 +293,6 @@ void Game_Engine::GameLoop() {
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) window.close();
                 if (gameEnded && keyPressed->code == sf::Keyboard::Key::Enter) {
-                    resetGameState();
                     player1ZoomFactor = 1.0f;
                     player2ZoomFactor = 1.0f;
                     if (player1) view1.setSize({viewHalfWidth, viewHeight}); view1.setCenter(player1->getPosition());

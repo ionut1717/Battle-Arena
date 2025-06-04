@@ -30,7 +30,7 @@ UI_Elements::UI_Elements(const sf::Font& font) :
     m_ownershipBarBackground.setOutlineThickness(2.0f);
 
     m_player1OwnershipBar.setFillColor(sf::Color::Blue);
-    m_player2OwnershipBar.setFillColor(sf::Color::Red);
+    m_player2OwnershipBar.setFillColor(sf::Color::Cyan);
     m_player1OwnershipBar.setSize({0, UIConstants::OWNERSHIP_BAR_HEIGHT});
     m_player2OwnershipBar.setSize({0, UIConstants::OWNERSHIP_BAR_HEIGHT});
 

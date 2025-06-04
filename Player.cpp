@@ -79,7 +79,7 @@ Player::Player(int playerID, const sf::Color& color, sf::Vector2f startPosition,
       stuckSpeedFactor(0.2f),
       isOnDamageTile(false),
       damageTickRate(1.0f),
-      damageAmountPerTick(0.5),
+      damageAmountPerTick(1),
       tookInitialDamage(false),
       lastGridPosition({-1, -1}),
       animationFrameTime(1.0f / 10.0f),
@@ -180,7 +180,7 @@ void Player::resetForReuse() {
 int Player::getPlayerID() const { return playerID; }
 
 void Player::getDamageBalloon() {
-    int damage = damageAmountPerTick;
+    int damage = AttackBalloon::getDamage();
     if (playerHealth <= damage) {
         playerHealth = 0;
         isEliminated = true;
