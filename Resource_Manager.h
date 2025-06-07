@@ -43,7 +43,6 @@ public:
             }
             resources[filePath] = std::move(newResource);
         }
-
         return *resources[filePath];
     }
 };
